@@ -11,7 +11,8 @@
   "author": "Rainer Simon",
   "license": "BSD-3-Clause",
   "dependencies": {
-    "express": "^4.17.1"
+    "express": "^4.17.1",
+    "rethinkdb": "^2.4.2"
   },
   "devDependencies": {
     "@babel/cli": "^7.16.0",
