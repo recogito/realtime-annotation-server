@@ -10,5 +10,5 @@ export const exists = () =>
 export const initDB = () =>
   r.connect(CONFIG).then(conn =>
     r.dbCreate(CONFIG.db)
-      .do(() => r.tableCreate('annotation', { primaryKey: 'id '}))
+      .do(() => r.tableCreate('annotation', { primaryKey: 'id' }))
       .run(conn));

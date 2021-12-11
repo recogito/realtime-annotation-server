@@ -1,7 +1,7 @@
 import express from 'express';
 
 import { exists, initDB } from './db/init';
-import { createAnnotation, deleteById } from './db/annotation';
+import { createAnnotation, deleteById, findBySource } from './db/annotation';
 
 const app = express();
 
@@ -14,12 +14,11 @@ exists().then(exists => {
     initDB();
 });
 
-app.get('/annotation/:annotationId', (req, res) => {
-  const { annotationId } = req.params;
-
-  // TODO retrieve annotation with given ID
-
-});
+app.get('/annotation/search', (req, res) => {
+  findBySource(req.query.source).then(result => {
+    res.json(result);
+  });
+})
 
 app.post('/annotation', (req, res) => {
   createAnnotation(req.body).then(() => {
@@ -28,17 +27,12 @@ app.post('/annotation', (req, res) => {
 });
 
 app.delete('/annotation/:annotationId', (req, res) => {
-  deleteById(req.params.annotationId).then(() => {
+  deleteById(`#${req.params.annotationId}`).then(() => {
     res.json({ result: 'success' });
   });
 });
 
-app.get('/search', (req, res) => {
-  const { source } = req.query;
 
-  // TODO return annotations for source
-
-});
 
 const PORT = 8080;
 app.listen(PORT);

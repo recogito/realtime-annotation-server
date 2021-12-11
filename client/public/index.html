@@ -32,8 +32,12 @@
         });
 
         anno.on('deleteAnnotation', function(annotation) {
-          console.log('deleted', annotation);
-        });        
+          fetch('/annotation/' + annotation.id.substr(1), {
+            method: 'DELETE'
+          });
+        });  
+        
+        anno.loadAnnotations('/annotation/search?source=' + encodeURIComponent('http://localhost:3000/640px-Hallstatt.jpg'));
       }
     </script>
   </body>
