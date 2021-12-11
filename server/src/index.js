@@ -1,6 +1,9 @@
+import dotenv from 'dotenv';
 import express from 'express';
 
 import { exists, initDB } from './db/init';
+
+dotenv.config();
 
 const app = express();
 

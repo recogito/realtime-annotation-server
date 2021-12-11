@@ -11,7 +11,7 @@ export default {
   },
   plugins: [
     json(),
-    nodeResolve({ preferBuiltins: true }),
+    nodeResolve({ preferBuiltins: false }),
     commonjs(),
     babel({ babelHelpers: 'bundled' })
   ]

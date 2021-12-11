@@ -1,18 +1,14 @@
 import r from 'rethinkdb';
 
-const CONFIG = {
-  host: 'localhost',
-  port: 28015,
-  db: 'recogito'
-}
+import CONFIG from './config';
 
 export const exists = () =>
   r.connect(CONFIG)
     .then(conn => r.dbList().run(conn))
-    .then(databases => databases.includes('recogito'));
+    .then(databases => databases.includes(CONFIG.db));
 
 export const initDB = () =>
   r.connect(CONFIG).then(conn =>
-    r.dbCreate('recogito')
+    r.dbCreate(CONFIG.db)
       .do(() => r.tableCreate('annotations'))
       .run(conn));
