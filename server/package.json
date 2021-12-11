@@ -1,5 +1,5 @@
 {
-  "name": "recogito-annotation-server",
+  "name": "@recogito/annotation-server",
   "version": "0.0.1",
   "description": "An annotation server for RecogitoJS/Annotorious built with RethinkDB",
   "main": "src/index.js",
