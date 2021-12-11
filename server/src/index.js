@@ -2,6 +2,7 @@ import dotenv from 'dotenv';
 import express from 'express';
 
 import { exists, initDB } from './db/init';
+import { createAnnotation, deleteById } from './db/annotation';
 
 dotenv.config();
 
@@ -30,10 +31,9 @@ app.post('/annotation', (req, res) => {
 });
 
 app.delete('/annotation/:annotationId', (req, res) => {
-  const { annotationId } = req.params;
-
-  // TODO delete annotation with given ID
-
+  deleteById(req.params.annotationId).then(() => {
+    res.json({ result: 'success' });
+  });
 });
 
 app.get('/search', (req, res) => {
@@ -46,4 +46,4 @@ app.get('/search', (req, res) => {
 const PORT = 8080;
 app.listen(PORT);
 
-console.log(`API running on port ${PORT}`);
+console.log(`API running on port ${PORT}`); 
