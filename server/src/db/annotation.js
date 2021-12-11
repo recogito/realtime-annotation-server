@@ -24,3 +24,10 @@ export const findBySource = source =>
       .filter({ target: { source }})
       .run(conn))
     .then(cursor => cursor.toArray());
+
+export const changesForSource = source => 
+  conn()
+    .then(({ conn, table }) => table
+      .filter({ target: { source }})
+      .changes()
+      .run(conn));

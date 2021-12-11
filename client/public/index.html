@@ -5,6 +5,16 @@
     <title>Annotorious | Annotation Server Example</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@recogito/annotorious@2.6.0/dist/annotorious.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@recogito/annotorious@2.6.0/dist/annotorious.min.js"></script>
+    <style>
+      .a9s-annotation .a9s-inner {
+        stroke-width:0;
+      }
+
+      .a9s-annotation .a9s-outer {
+        stroke-width:3px;
+        stroke:red;
+      }
+    </style>
   </head>
   <body>
     <img id="hallstatt" src="640px-Hallstatt.jpg">
@@ -16,35 +26,7 @@
           locale: 'auto'
         });
 
-        anno.on('createAnnotation', function (annotation) {
-          fetch('/annotation', {
-            method: 'POST',
-            headers: {
-              'Accept': 'application/json',
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(annotation)
-          });
-        });
-
-        anno.on('updateAnnotation', function(annotation, previous) {
-          fetch('/annotation', {
-            method: 'POST',
-            headers: {
-              'Accept': 'application/json',
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(annotation)
-          });
-        });
-
-        anno.on('deleteAnnotation', function(annotation) {
-          fetch('/annotation/' + annotation.id.substr(1), {
-            method: 'DELETE'
-          });
-        });  
-        
-        anno.loadAnnotations('/annotation/search?source=' + encodeURIComponent('http://localhost:3000/640px-Hallstatt.jpg'));
+        recogito.RethinkClient(anno);
       }
     </script>
   </body>

@@ -10,10 +10,10 @@ const resolveAppPath = relativePath => path.resolve(APP_DIR, relativePath);
 module.exports = {
   entry: resolveAppPath('src'),
   output: {
-    filename: 'recogito-server-sdk.js',
-    library: ['recogito', 'AnnotationServer' ],
+    filename: 'recogito-rethink-client.js',
+    library: ['recogito', 'RethinkClient'],
     libraryTarget: 'umd',
-    umdNamedDefine: true
+    libraryExport: 'default'
   },
   performance: {
     hints: false
@@ -56,6 +56,11 @@ module.exports = {
     },
     proxy: {
       '/annotation': {
+        target: 'http://localhost:8080/',
+        secure: false,
+        changeOrigin: true
+      },
+      '/socket.io/': {
         target: 'http://localhost:8080/',
         secure: false,
         changeOrigin: true
