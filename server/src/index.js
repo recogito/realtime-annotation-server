@@ -1,10 +1,7 @@
-import dotenv from 'dotenv';
 import express from 'express';
 
 import { exists, initDB } from './db/init';
 import { createAnnotation, deleteById } from './db/annotation';
-
-dotenv.config();
 
 const app = express();
 
@@ -25,9 +22,9 @@ app.get('/annotation/:annotationId', (req, res) => {
 });
 
 app.post('/annotation', (req, res) => {
-
-  // TODO create/update annotation
-
+  createAnnotation(req.body).then(() => {
+    res.json({ result: 'success' });
+  });
 });
 
 app.delete('/annotation/:annotationId', (req, res) => {

@@ -53,6 +53,13 @@ module.exports = {
     static: {
       directory: resolveAppPath('public'),
       publicPath: '/'
+    },
+    proxy: {
+      '/annotation': {
+        target: 'http://localhost:8080/',
+        secure: false,
+        changeOrigin: true
+      }
     }
   },
   plugins: [

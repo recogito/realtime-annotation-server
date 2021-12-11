@@ -1,3 +1,5 @@
+import r from 'rethinkdb';
+
 import CONFIG from './config';
 
 export const createAnnotation = annotation =>

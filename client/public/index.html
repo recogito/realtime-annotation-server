@@ -17,7 +17,14 @@
         });
 
         anno.on('createAnnotation', function (annotation) {
-          console.log('created', annotation);
+          fetch('/annotation', {
+            method: 'POST',
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(annotation)
+          });
         });
 
         anno.on('updateAnnotation', function(annotation, previous) {
