@@ -28,7 +28,14 @@
         });
 
         anno.on('updateAnnotation', function(annotation, previous) {
-          console.log('updated', previous, 'with', annotation);
+          fetch('/annotation', {
+            method: 'POST',
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(annotation)
+          });
         });
 
         anno.on('deleteAnnotation', function(annotation) {

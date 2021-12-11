@@ -1,7 +1,7 @@
 import express from 'express';
 
 import { exists, initDB } from './db/init';
-import { createAnnotation, deleteById, findBySource } from './db/annotation';
+import { upsertAnnotation, deleteById, findBySource } from './db/annotation';
 
 const app = express();
 
@@ -21,7 +21,7 @@ app.get('/annotation/search', (req, res) => {
 })
 
 app.post('/annotation', (req, res) => {
-  createAnnotation(req.body).then(() => {
+  upsertAnnotation(req.body).then(() => {
     res.json({ result: 'success' });
   });
 });
