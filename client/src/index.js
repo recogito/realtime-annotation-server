@@ -80,7 +80,7 @@ class RethinkClientPlugin {
       socket.emit('modify', { target });
     });
 
-    socket.on('modified', msg => {
+    socket.on('edit', msg => {
       if (!instance.getSelected()) {
         console.log(msg);
         const { annotation } = msg;
@@ -88,6 +88,13 @@ class RethinkClientPlugin {
           instance.addAnnotation(annotation);
       }
     });
+
+    socket.on('upsert', annotation => {
+      if (!instance.getSelected()) {
+        instance.addAnnotation(annotation);
+      }
+    });
+
   }
 
 }

@@ -25,7 +25,7 @@ export const findBySource = source =>
       .run(conn))
     .then(cursor => cursor.toArray());
 
-export const changesForSource = source => 
+export const followChanges = source => 
   conn()
     .then(({ conn, table }) => table
       .filter({ target: { source }})
