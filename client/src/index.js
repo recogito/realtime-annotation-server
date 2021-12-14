@@ -1,8 +1,36 @@
 import { io } from 'socket.io-client';
 
+// HACK!
+let locked = null;
+
 class RethinkClientPlugin {
   
   constructor(instance, config) {
+
+    const socket = io();
+
+    instance.on('selectAnnotation', annotation => {
+      console.log('obtaining lock on annotation', annotation);
+      
+      // Hack
+      locked = annotation;
+
+      socket.emit('obtainLock', { annotation });
+    });
+
+    const unlock = () => {
+      if (locked) {
+        console.log('releasing lock');
+        socket.emit('releaseLocks');
+      }
+    }
+
+    // We really should add a editorClose event (maybe needs a different
+    // name that's also headless-compatible)
+    instance.on('cancelSelected', unlock);
+    instance.on('createAnnotation', unlock);
+    instance.on('updateAnnotation', unlock);
+    instance.on('deleteAnnotation', unlock);
 
     instance.on('createAnnotation', annotation =>
       fetch('/annotation', {
@@ -29,21 +57,37 @@ class RethinkClientPlugin {
         method: 'DELETE'
       }));  
 
-    const source = encodeURIComponent(instance._env.image.src);
+    const source = instance._env.image.src;
 
     instance
-      .loadAnnotations(`/annotation/search?source=${source}`);
+      .loadAnnotations(`/annotation/search?source=${encodeURIComponent(source)}`);
 
-
-    const socket = io();
-
-    socket.on('connect', function(data) {
+    socket.on('connect', () => {
       console.log('Subscribing to live updates');
-
-      fetch(`/annotation/subscribe?source=${source}`);
+      socket.emit('joinSession', { source });
     });
 
-    socket.on('annotation', a => instance.addAnnotation(a));
+    socket.on('obtainLockFailed', ({ annotation }) => {
+      if (locked.id === annotation.id) {
+        // Roll back!
+        console.log('Error: could not lock annotation for editing');
+        this.locked = null;
+        instance.selectAnnotation(null);
+      }
+    });
+
+    instance.on('changeSelectionTarget', target => {
+      socket.emit('modify', { target });
+    });
+
+    socket.on('modified', msg => {
+      if (!instance.getSelected()) {
+        console.log(msg);
+        const { annotation } = msg;
+        if (annotation)
+          instance.addAnnotation(annotation);
+      }
+    });
   }
 
 }

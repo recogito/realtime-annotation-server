@@ -5,6 +5,7 @@
     <title>Annotorious | Annotation Server Example</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@recogito/annotorious@2.6.0/dist/annotorious.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@recogito/annotorious@2.6.0/dist/annotorious.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@recogito/annotorious-better-polygon@latest/dist/annotorious-better-polygon.js"></script>
     <style>
       .a9s-annotation .a9s-inner {
         stroke-width:0;
@@ -26,7 +27,10 @@
           locale: 'auto'
         });
 
+        Annotorious.BetterPolygon(anno);
         recogito.RethinkClient(anno);
+
+        anno.setDrawingTool('polygon');
       }
     </script>
   </body>
