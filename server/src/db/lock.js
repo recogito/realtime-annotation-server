@@ -5,6 +5,10 @@ import CONFIG from './config';
 const conn = () => 
   r.connect(CONFIG).then(conn => ({ conn, table: r.table('lock') }));
 
+export const clearAllLocks = () => 
+  conn().then(({ conn, table }) =>
+    table.delete().run(conn));
+
 export const obtainLock = (clientId, annotation) => {
   // Note that ID will be null for Selections (which is
   // fine - RethinkDB will auto-assign a temporary ID)
@@ -13,7 +17,10 @@ export const obtainLock = (clientId, annotation) => {
   // The 'lock' object records annotation ID (if any),
   // annotation and ID of the locking socket connection
   const lock = {
-    id, annotation, lockedBy: clientId
+    id, 
+    lockedBy: clientId,
+    action: 'locked',
+    annotation
   }
 
   // If there's already a lock on this ID,
@@ -29,10 +36,15 @@ export const releaseLocks = clientId =>
     .delete()
     .run(conn));
 
-export const modifyLocked = (clientId, target) =>
+export const modifyLocked = (clientId, action, target) => target ? 
   conn().then(({ conn, table }) => table
     .filter({ lockedBy: clientId })
-    .update({ annotation: { target } })
+    .update({ action, annotation: { target } })
+    .run(conn)) : 
+  
+  conn().then(({ conn, table }) => table
+    .filter({ lockedBy: clientId })
+    .update({ action })
     .run(conn));
 
 export const followChanges = source =>

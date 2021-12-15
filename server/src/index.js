@@ -3,6 +3,7 @@ import express from 'express';
 
 import SessionPool from './SessionPool';
 import { exists, initDB } from './db/init';
+import { clearAllLocks } from './db/lock';
 import { deleteById, findBySource, upsertAnnotation } from './db/annotation';
 
 const app = express();
@@ -20,7 +21,9 @@ app.set('json spaces', 2);
  * DB init, if needed
  */
 exists().then(exists => {
-  if (!exists)
+  if (exists)
+    clearAllLocks();
+  else
     initDB();
 });
 

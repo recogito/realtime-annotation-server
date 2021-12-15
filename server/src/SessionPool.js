@@ -27,7 +27,7 @@ class SessionPool {
 
         // Disconnect this socket from all sessions it has joined
         const sessions = this.findSessions(socket);
-        sessions.forEach(s => s.leave(s));
+        sessions.forEach(s => s.leave(socket));
       });
     });
   }

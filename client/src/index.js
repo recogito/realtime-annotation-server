@@ -18,19 +18,19 @@ class RethinkClientPlugin {
       socket.emit('obtainLock', { annotation });
     });
 
-    const unlock = () => {
-      if (locked) {
-        console.log('releasing lock');
-        socket.emit('releaseLocks');
-      }
-    }
-
     // We really should add a editorClose event (maybe needs a different
     // name that's also headless-compatible)
-    instance.on('cancelSelected', unlock);
-    instance.on('createAnnotation', unlock);
-    instance.on('updateAnnotation', unlock);
-    instance.on('deleteAnnotation', unlock);
+    instance.on('cancelSelected', annotation =>
+      socket.emit('revert', annotation));
+
+    instance.on('createAnnotation', annotation => 
+      socket.emit('commit', annotation));
+
+    instance.on('updateAnnotation', annotation =>
+      socket.emit('commit', annotation));
+
+    instance.on('deleteAnnotation', annotation => 
+      socket.emit('delete', annotation));
 
     instance.on('createAnnotation', annotation =>
       fetch('/annotation', {
@@ -77,24 +77,23 @@ class RethinkClientPlugin {
     });
 
     instance.on('changeSelectionTarget', target => {
-      socket.emit('modify', { target });
+      socket.emit('change', { target });
     });
 
     socket.on('edit', msg => {
       if (!instance.getSelected()) {
         console.log(msg);
-        const { annotation } = msg;
-        if (annotation)
+        const { annotation, action } = msg;
+
+        if (['change', 'revert', 'commit'].includes(action)) {
           instance.addAnnotation(annotation);
+        } else if (action === 'delete') {
+          instance.removeAnnotation(annotation);
+        } else if (action === 'locked') {
+          // TODO visual indication
+        }
       }
     });
-
-    socket.on('upsert', annotation => {
-      if (!instance.getSelected()) {
-        instance.addAnnotation(annotation);
-      }
-    });
-
   }
 
 }
