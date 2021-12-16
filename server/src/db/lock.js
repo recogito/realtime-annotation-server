@@ -9,17 +9,17 @@ export const clearAllLocks = () =>
   conn().then(({ conn, table }) =>
     table.delete().run(conn));
 
-export const obtainLock = (clientId, annotation) => {
+const lock = (clientId, annotation, action, identifier) => {
   // Note that ID will be null for Selections (which is
   // fine - RethinkDB will auto-assign a temporary ID)
-  const { id } = annotation;
+  const id = identifier || annotation.id;
 
   // The 'lock' object records annotation ID (if any),
   // annotation and ID of the locking socket connection
   const lock = {
     id, 
     lockedBy: clientId,
-    action: 'locked',
+    action,
     annotation
   }
 
@@ -30,16 +30,24 @@ export const obtainLock = (clientId, annotation) => {
     .run(conn)); 
 }
 
+export const selectAnnotation = (clientId, annotation) =>
+  lock(clientId, annotation, 'selected');
+
+export const createSelection = (clientId, selection) => {
+  const id = `selection-${clientId}`;
+  lock(clientId, { ...selection, id }, 'drafted', id);
+}
+
 export const releaseLocks = clientId =>
   conn().then(({ conn, table }) => table
     .filter({ lockedBy: clientId })
     .delete()
     .run(conn));
 
-export const modifyLocked = (clientId, action, target) => target ? 
+export const modifyAnnotation = (clientId, action, annotation) => annotation ? 
   conn().then(({ conn, table }) => table
     .filter({ lockedBy: clientId })
-    .update({ action, annotation: { target } })
+    .update({ action, annotation })
     .run(conn)) : 
   
   conn().then(({ conn, table }) => table

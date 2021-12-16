@@ -15,22 +15,34 @@ class RethinkClientPlugin {
       // Hack
       locked = annotation;
 
-      socket.emit('obtainLock', { annotation });
+      socket.emit('selectAnnotation', annotation);
+    });
+
+    instance.on('createSelection', selection  => {
+      // Hack
+      locked = selection;
+
+      socket.emit('createSelection', selection);
     });
 
     // We really should add a editorClose event (maybe needs a different
     // name that's also headless-compatible)
     instance.on('cancelSelected', annotation =>
-      socket.emit('revert', annotation));
+      socket.emit('cancelSelected', annotation));
 
     instance.on('createAnnotation', annotation => 
-      socket.emit('commit', annotation));
+      socket.emit('createAnnotation', annotation));
 
     instance.on('updateAnnotation', annotation =>
-      socket.emit('commit', annotation));
+      socket.emit('updateAnnotation', annotation));
 
     instance.on('deleteAnnotation', annotation => 
-      socket.emit('delete', annotation));
+      socket.emit('deleteAnnotation', annotation));
+
+    instance.on('changeSelectionTarget', target => {
+      const annotation = { ...locked, target };
+      socket.emit('change', annotation);
+    });
 
     instance.on('createAnnotation', annotation =>
       fetch('/annotation', {
@@ -76,23 +88,24 @@ class RethinkClientPlugin {
       }
     });
 
-    instance.on('changeSelectionTarget', target => {
-      socket.emit('change', { target });
-    });
-
     socket.on('edit', msg => {
       if (!instance.getSelected()) {
-        console.log(msg);
         const { annotation, action } = msg;
 
-        if (['change', 'revert', 'commit'].includes(action)) {
+        if (['drafted', 'updated', 'changed', 'reverted'].includes(action)) {
           instance.addAnnotation(annotation);
-        } else if (action === 'delete') {
+        } else if (action === 'deleted') {
           instance.removeAnnotation(annotation);
-        } else if (action === 'locked') {
+        } else if (action === 'selected') {
           // TODO visual indication
         }
       }
+    });
+
+    socket.on('create', msg => {
+      const { selection_id, annotation } = msg;
+      instance.removeAnnotation(selection_id);
+      instance.addAnnotation(annotation);
     });
   }
 

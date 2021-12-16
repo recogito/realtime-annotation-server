@@ -1,4 +1,4 @@
-import { modifyLocked, obtainLock, releaseLocks } from "./db/lock";
+import { selectAnnotation, createSelection, releaseLocks, modifyAnnotation } from "./db/lock";
 import { followChanges  } from "./db/lock";
 
 /**
@@ -17,18 +17,27 @@ export default class Session {
     // messages to all connected sockets
     this.feed = followChanges(source).then(cursor =>
       cursor.each((error, row) => {        
-        const { new_val } = row;
+        const { old_val, new_val } = row;
 
         if (new_val) {
           const { lockedBy, action } = new_val;
 
+          // Only needed for createAnnotation, to 
+          // replace Selection with Annotation.
+          const toReplace = action === 'created' ? old_val?.id : null;
+
           this.sockets.forEach(socket => {
-            if (socket.id !== lockedBy) 
-              socket.emit('edit', new_val)
+            if (socket.id !== lockedBy) { 
+              if (toReplace) {
+                socket.emit('create', { ...new_val, selection_id: toReplace });
+              } else {
+                socket.emit('edit', new_val)
+              }
+            }
           });
 
           // Release lock
-          if (['revert', 'commit', 'delete'].includes(action))
+          if (['created', 'updated', 'reverted', 'deleted'].includes(action))
             releaseLocks(lockedBy)
         }
       }));
@@ -37,12 +46,13 @@ export default class Session {
   join = socket => {
     const { id } = socket;
 
-    socket.on('obtainLock', msg => {
-      const { annotation } = msg;
+    socket.on('createSelection', selection =>
+      createSelection(id, selection));
 
+    socket.on('selectAnnotation', annotation => {
       console.log(`Client ${id} requests lock on ${annotation.type}`);
 
-      obtainLock(id, annotation).then(result => {
+      selectAnnotation(id, annotation).then(result => {
         if (result.errors) {
           console.log('Obtain lock failed', result.first_error);
           socket.emit('obtainLockFailed', { annotation });
@@ -50,23 +60,21 @@ export default class Session {
       });
     });
 
-    socket.on('change', msg => {
-      const { target } = msg;
-      modifyLocked(id, 'change', target);
-    })
+    socket.on('createAnnotation', annotation =>
+      modifyAnnotation(id, 'created', annotation));
 
-    socket.on('revert', msg => {
-      const { target } = msg;
-      modifyLocked(id, 'revert', target);
+    socket.on('updateAnnotation', annotation =>
+      modifyAnnotation(id, 'updated', annotation));
+
+    socket.on('cancelSelected', annotation =>
+      modifyAnnotation(id, 'reverted', annotation));
+
+    socket.on('deleteAnnotation', () => {
+      modifyAnnotation(id, 'deleted');
     });
 
-    socket.on('commit', msg => {
-      modifyLocked(id, 'commit');
-    });
-
-    socket.on('delete', msg => {
-      modifyLocked(id, 'delete');
-    });
+    socket.on('change', annotation =>
+      modifyAnnotation(id, 'changed', annotation));
 
     this.sockets.push(socket);
   } 
