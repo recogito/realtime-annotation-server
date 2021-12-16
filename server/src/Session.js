@@ -11,8 +11,6 @@ export default class Session {
 
     this.sockets = [];
 
-    // TODO don't create change feed for a single-user session!
-
     // Subscribe to change feed and post change 
     // messages to all connected sockets
     this.feed = followChanges(source).then(cursor =>
@@ -44,6 +42,9 @@ export default class Session {
   }
 
   join = socket => {
+    // TODO When a new socket joins, forward current state
+    // so the client can sync up with edits in progress
+
     const { id } = socket;
 
     socket.on('createSelection', selection =>
@@ -87,9 +88,7 @@ export default class Session {
     this.sockets = this.sockets.filter(s => s !== socket);
   }
 
-  close = () => {
+  close = () =>
     this.feed.close();
-    this.annotationChanges.close();
-  }
 
 }
