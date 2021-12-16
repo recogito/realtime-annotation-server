@@ -29,13 +29,12 @@
       }
 
       .a9s-annotation.locked .a9s-inner {
-        stroke-width:0;
-        fill:rgba(255, 255, 0, 0.2);
+        stroke-width:1px;
+        fill:rgba(255, 255, 255, 0.15);
       }
 
       .a9s-annotation.locked .a9s-outer {
-        stroke-width:2px;
-        stroke:rgba(255, 255, 0, 0.75);
+        stroke-width:0;
       }
       .a9s-annotationlayer .a9s-formatter-el,
       .a9s-annotationlayer .a9s-formatter-el foreignObject {
@@ -53,7 +52,7 @@
         display:table;
         padding:3px 5px;
         white-space:nowrap;
-        color:#000;
+        color:#fff;
         background-color:rgba(255, 255, 0, 0.85);
         border-radius:3px;
         font-size:14px;
@@ -69,9 +68,11 @@
       const formatter = annotation => {
         const { id } = annotation;
 
-        const lockedBy = window.currentLocks[id];
+        const lock = window.currentLocks[id];
 
-        if (lockedBy) {
+        if (lock) {
+          const { lockedBy, color } = lock;
+
           const foreignObject = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
 
           foreignObject.setAttribute('width', '1px');
@@ -79,14 +80,15 @@
 
           foreignObject.innerHTML = `
             <div xmlns="http://www.w3.org/1999/xhtml" class="a9s-shape-label-wrapper">
-              <div class="a9s-shape-label">
+              <div class="a9s-shape-label" style="background-color:${color}">
                 ${lockedBy}
               </div>
             </div>`;
           return {
             className: 'locked',
             element: foreignObject,
-            'data-locked': lockedBy
+            'data-locked': lockedBy,
+            style: `stroke: ${color}`
           }
         }
       }

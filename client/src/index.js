@@ -3,6 +3,39 @@ import { io } from 'socket.io-client';
 // HACK!
 let locked = null;
 
+// https://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
+function shuffle(array) {
+  let currentIndex = array.length,  randomIndex;
+
+  // While there remain elements to shuffle...
+  while (currentIndex != 0) {
+
+    // Pick a remaining element...
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex--;
+
+    // And swap it with the current element.
+    [array[currentIndex], array[randomIndex]] = [
+      array[randomIndex], array[currentIndex]];
+  }
+
+  return array;
+}
+
+const palette = shuffle([
+  'blueviolet', 'blue', 'darkgreen', 'darkorange', 'indigo', 'saddlebrown', 'steelblue'
+]);
+
+const addCurrentLock = (annotationId, lockedBy) => {
+  const count = Object.keys(window.currentLocks).length;
+  const color = palette[count % palette.length];
+  window.currentLocks[annotationId] = { lockedBy, color };
+}
+
+const removeCurrentLock = annotationId => {
+  delete window.currentLocks[annotationId];
+}
+
 class RethinkClientPlugin {
 
   constructor(instance, config) {
@@ -93,10 +126,10 @@ class RethinkClientPlugin {
 
       if (['drafted', 'updated', 'changed', 'reverted'].includes(action)) {
         if (action === 'drafted')
-          window.currentLocks[annotation.id] = msg.lockedBy;
+          addCurrentLock(annotation.id, msg.lockedBy);
 
         if (['updated', 'reverted'].includes(action))
-          delete window.currentLocks[annotation.id];
+          removeCurrentLock(annotation.id);
 
         if (action === 'reverted' && annotation.id.startsWith('selection'))
           instance.removeAnnotation(annotation);
@@ -108,7 +141,7 @@ class RethinkClientPlugin {
         console.log('remote select!', annotation.id);
         console.log('current selected', instance.getSelected()?.id);
         
-        window.currentLocks[msg.id] = msg.lockedBy;
+        addCurrentLock(msg.id, msg.lockedBy);
         instance.addAnnotation(annotation);
       }
     });
