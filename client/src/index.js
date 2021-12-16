@@ -4,7 +4,7 @@ import { io } from 'socket.io-client';
 let locked = null;
 
 class RethinkClientPlugin {
-  
+
   constructor(instance, config) {
 
     const socket = io();
@@ -89,16 +89,27 @@ class RethinkClientPlugin {
     });
 
     socket.on('edit', msg => {
-      if (!instance.getSelected()) {
-        const { annotation, action } = msg;
+      const { annotation, action } = msg;
 
-        if (['drafted', 'updated', 'changed', 'reverted'].includes(action)) {
-          instance.addAnnotation(annotation);
-        } else if (action === 'deleted') {
+      if (['drafted', 'updated', 'changed', 'reverted'].includes(action)) {
+        if (action === 'drafted')
+          window.currentLocks[annotation.id] = msg.lockedBy;
+
+        if (['updated', 'reverted'].includes(action))
+          delete window.currentLocks[annotation.id];
+
+        if (action === 'reverted' && annotation.id.startsWith('selection'))
           instance.removeAnnotation(annotation);
-        } else if (action === 'selected') {
-          // TODO visual indication
-        }
+        else
+          instance.addAnnotation(annotation);
+      } else if (action === 'deleted') {
+        instance.removeAnnotation(annotation);
+      } else if (action === 'selected') {
+        console.log('remote select!', annotation.id);
+        console.log('current selected', instance.getSelected()?.id);
+        
+        window.currentLocks[msg.id] = msg.lockedBy;
+        instance.addAnnotation(annotation);
       }
     });
 

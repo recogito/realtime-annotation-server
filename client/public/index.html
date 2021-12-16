@@ -15,22 +15,82 @@
         stroke-width:3px;
         stroke:red;
       }
+
+      .a9s-annotation.locked .a9s-inner {
+        stroke-width:0;
+        fill:rgba(255, 255, 0, 0.2);
+      }
+
+      .a9s-annotation.locked .a9s-outer {
+        stroke-width:2px;
+        stroke:rgba(255, 255, 0, 0.75);
+      }
+      .a9s-annotationlayer .a9s-formatter-el,
+      .a9s-annotationlayer .a9s-formatter-el foreignObject {
+        overflow:visible;
+        pointer-events:none;
+      }
+
+      .a9s-annotationlayer .a9s-formatter-el foreignObject .a9s-shape-label-wrapper {
+        position:relative;
+        transform:translateY(-100%);
+        padding-bottom:4px;
+      }
+
+      .a9s-annotationlayer .a9s-formatter-el foreignObject .a9s-shape-label-wrapper .a9s-shape-label {
+        display:table;
+        padding:3px 5px;
+        white-space:nowrap;
+        color:#000;
+        background-color:rgba(255, 255, 0, 0.85);
+        border-radius:3px;
+        font-size:14px;
+      }
     </style>
   </head>
   <body>
     <img id="hallstatt" src="640px-Hallstatt.jpg">
 
     <script>
+      window.currentLocks = {};
+
+      const formatter = annotation => {
+        const { id } = annotation;
+
+        const lockedBy = window.currentLocks[id];
+
+        if (lockedBy) {
+          const foreignObject = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
+
+          foreignObject.setAttribute('width', '1px');
+          foreignObject.setAttribute('height', '1px');
+
+          foreignObject.innerHTML = `
+            <div xmlns="http://www.w3.org/1999/xhtml" class="a9s-shape-label-wrapper">
+              <div class="a9s-shape-label">
+                ${lockedBy}
+              </div>
+            </div>`;
+          return {
+            className: 'locked',
+            element: foreignObject,
+            'data-locked': lockedBy
+          }
+        }
+      }
+
       window.onload = function() {
         anno = Annotorious.init({
           image: 'hallstatt',
-          locale: 'auto'
+          locale: 'auto',
+          formatter: formatter,
+          allowEmpty: true
         });
 
         Annotorious.BetterPolygon(anno);
         recogito.RethinkClient(anno);
 
-        anno.setDrawingTool('polygon');
+        // anno.setDrawingTool('polygon');
       }
     </script>
   </body>
