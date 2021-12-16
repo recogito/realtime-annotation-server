@@ -4,16 +4,28 @@
     <meta charset="utf-8" />
     <title>Annotorious | Annotation Server Example</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@recogito/annotorious@2.6.0/dist/annotorious.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/@recogito/annotorious@2.6.0/dist/annotorious.min.js"></script>
+    <!-- script src="https://cdn.jsdelivr.net/npm/@recogito/annotorious@2.6.0/dist/annotorious.min.js"></script -->
+    <script src="annotorious.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@recogito/annotorious-better-polygon@latest/dist/annotorious-better-polygon.js"></script>
     <style>
       .a9s-annotation .a9s-inner {
-        stroke-width:0;
+        stroke-width:2px;
+        stroke:#fff;
       }
 
       .a9s-annotation .a9s-outer {
         stroke-width:3px;
-        stroke:red;
+        stroke:#000;
+      }
+
+      .a9s-handle .a9s-handle-outer {
+        stroke: #000;
+        stroke-width:2px;
+      }
+
+      .a9s-annotation .a9s-handle .a9s-handle-inner {
+        stroke-width:0;
+        fill: #ffff00;
       }
 
       .a9s-annotation.locked .a9s-inner {
