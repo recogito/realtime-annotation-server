@@ -48,6 +48,7 @@ class RethinkClientPlugin {
       // Hack
       locked = annotation;
 
+
       socket.emit('selectAnnotation', annotation);
     });
 
@@ -102,7 +103,14 @@ class RethinkClientPlugin {
         method: 'DELETE'
       }));  
 
-    const source = instance._env.image.src;
+    let source = instance._env.image?.src; 
+    if (!source) {
+      source = window.location.href;
+    
+      window.setTimeout(() => {
+          instance._env.image.src = source;
+      }, 1000);
+    }
 
     instance
       .loadAnnotations(`/annotation/search?source=${encodeURIComponent(source)}`);
@@ -122,6 +130,7 @@ class RethinkClientPlugin {
     });
 
     socket.on('edit', msg => {
+      console.log(msg);
       const { annotation, action } = msg;
 
       if (['drafted', 'updated', 'changed', 'reverted'].includes(action)) {
