@@ -1,136 +1,87 @@
-import Formatter, { lockAnnotation } from './formatter/Formatter';
-
 import { io } from 'socket.io-client';
 
-// HACK!
-let locked = null;
-
-// https://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
-function shuffle(array) {
-  let currentIndex = array.length,  randomIndex;
-
-  // While there remain elements to shuffle...
-  while (currentIndex != 0) {
-
-    // Pick a remaining element...
-    randomIndex = Math.floor(Math.random() * currentIndex);
-    currentIndex--;
-
-    // And swap it with the current element.
-    [array[currentIndex], array[randomIndex]] = [
-      array[randomIndex], array[currentIndex]];
-  }
-
-  return array;
-}
-
-const palette = shuffle([
-  'blueviolet', 'blue', 'darkgreen', 'darkorange', 'indigo', 'saddlebrown', 'steelblue'
-]);
-
-const addCurrentLock = (annotationId, lockedBy) => {
-  const count = Object.keys(window.currentLocks).length;
-  const color = palette[count % palette.length];
-  window.currentLocks[annotationId] = { lockedBy, color };
-}
-
-const removeCurrentLock = annotationId => {
-  delete window.currentLocks[annotationId];
-}
+import Formatter, { lockAnnotation, releaseLock } from './formatter/Formatter';
 
 class RethinkClientPlugin {
 
-  constructor(instance, config) {
+  constructor(instance) {
+    // Annotorious or RecogitoJS
+    this.instance = instance;
 
-    const socket = io();
+    // Open WebSocket
+    this.socket = io();
 
-    instance.on('selectAnnotation', annotation => {
-      console.log('obtaining lock on annotation', annotation);
-      
-      // Hack
-      locked = annotation;
+    // Track the current selection
+    this.currentSelection = null;
+  }
 
-
-      socket.emit('selectAnnotation', annotation);
+  _setupOutboundSocket = () => {
+    this.instance.on('selectAnnotation', annotation => {
+      this.currentSelection = annotation;   
+      this.socket.emit('selectAnnotation', annotation);
     });
 
-    instance.on('createSelection', selection  => {
-      // Hack
-      locked = selection;
-
-      socket.emit('createSelection', selection);
+    this.instance.on('createSelection', selection  => {
+      this.currentSelection = selection;
+      this.socket.emit('createSelection', selection);
     });
 
-    // We really should add a editorClose event (maybe needs a different
-    // name that's also headless-compatible)
-    instance.on('cancelSelected', annotation =>
-      socket.emit('cancelSelected', annotation));
+    this.instance.on('cancelSelected', annotation =>
+      this.socket.emit('cancelSelected', annotation));
 
-    instance.on('createAnnotation', annotation => 
-      socket.emit('createAnnotation', annotation));
+    this.instance.on('createAnnotation', annotation => 
+      this.socket.emit('createAnnotation', annotation));
 
-    instance.on('updateAnnotation', annotation =>
-      socket.emit('updateAnnotation', annotation));
+    this.instance.on('updateAnnotation', annotation =>
+      this.socket.emit('updateAnnotation', annotation));
 
-    instance.on('deleteAnnotation', annotation => 
-      socket.emit('deleteAnnotation', annotation));
+    this.instance.on('deleteAnnotation', annotation => 
+      this.socket.emit('deleteAnnotation', annotation));
 
-    instance.on('changeSelectionTarget', target => {
-      const annotation = { ...locked, target };
-      socket.emit('change', annotation);
+    this.instance.on('changeSelectionTarget', target => {
+      this.currentSelection = { ...this.currentSelection, target };
+      this.socket.emit('change', this.currentSelection);
+    });
+  }
+
+  _setupOutputCRUD = () => {
+    // Helper to create POST request
+    const postData = obj => ({
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(obj)
     });
 
-    instance.on('createAnnotation', annotation =>
-      fetch('/annotation', {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(annotation)
-      }));
+    this.instance.on('createAnnotation', annotation =>
+      fetch('/annotation', postData(annotation)));
 
-    instance.on('updateAnnotation', annotation =>
-      fetch('/annotation', {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(annotation)
-      }));
+    this.instance.on('updateAnnotation', annotation =>
+      fetch('/annotation', postData(annotation)));
 
-    instance.on('deleteAnnotation', annotation =>
-      fetch('/annotation/' + annotation.id.substr(1), {
-        method: 'DELETE'
-      }));  
+    this.instance.on('deleteAnnotation', annotation =>
+      fetch(`/annotation/${annotation.id.substr(1)}`, { method: 'DELETE' }));
+  }
 
-    /*
-    console.log('first', anno._env.image);
-
-    viewer.addHandler('open', function() {
-      console.log('load', anno._env.image);
-    });
-    */
-
-    instance
-      .loadAnnotations(`/annotation/search?source=${encodeURIComponent(instance._env.image?.src)}`);
-
-    socket.on('connect', () => {
+  _setupInboundSocket = () => {
+    // TODO join the session as soon as image.src is available (lazy load, OSD!)
+    this.socket.on('connect', () => {
       console.log('Subscribing to live updates');
-      socket.emit('joinSession', { source: instance._env.image?.src });
+      this.socket.emit('joinSession', { source: instance._env.image?.src });
     });
 
-    socket.on('obtainLockFailed', ({ annotation }) => {
+    this.socket.on('obtainLockFailed', ({ annotation }) => {
       if (locked.id === annotation.id) {
         // Roll back!
         console.log('Error: could not lock annotation for editing');
-        this.locked = null;
-        instance.selectAnnotation(null);
+        this.currentSelection = null;
+        this.instance.selectAnnotation(null);
       }
     });
 
-    socket.on('edit', msg => {
+    this.socket.on('edit', msg => {
       console.log(msg);
       const { annotation, action } = msg;
 
@@ -161,9 +112,21 @@ class RethinkClientPlugin {
       instance.removeAnnotation(selection_id);
       instance.addAnnotation(annotation);
     });
+
   }
+
+    /*
+    console.log('first', anno._env.image);
+
+    viewer.addHandler('open', function() {
+      console.log('load', anno._env.image);
+    });
+    */
+
+//    instance
+//      .loadAnnotations(`/annotation/search?source=${encodeURIComponent(instance._env.image?.src)}`);
+
 
 }
 
-export default (instance, config) =>
-  new RethinkClientPlugin(instance, config);
+export default instance => new RethinkClientPlugin(instance);

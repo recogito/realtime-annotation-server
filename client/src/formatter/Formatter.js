@@ -9,10 +9,13 @@ const CURRENT_LOCKS = {}
 /**
  * Helper to track current locks and collaborator colors.
  */
-export const lockAnnotation = (annotation, lockedBy) => {
+export const lockAnnotation = (annotationId, lockedBy) => {
   const color = getColor(lockedBy);
-  CURRENT_LOCKS[annotation.id] = { lockedBy, color };
+  CURRENT_LOCKS[annotationId] = { lockedBy, color };
 }
+
+export const releaseLock = annotationId =>
+  delete CURRENT_LOCKS[annotationId];
 
 export default annotation => {
   // Check if this annotation is locked by someone
