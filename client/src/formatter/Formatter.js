@@ -1,19 +1,17 @@
-// A map of collaborator -> color, populated dynamically
-// as collaborators join the session
-const COLOR_MAP = {
+import { getColor } from './Colors';
 
-}
+/**
+ * Map of annotations currently locked by
+ * other collaborators
+ */
+const CURRENT_LOCKS = {}
 
-// Map of annotations currently locked by
-// other collaborators
-const CURRENT_LOCKS = {
-
-}
-
-export const addLock = (annotation, lockedBy) => {
-  const count = Object.keys(window.currentLocks).length;
-  const color = palette[count % palette.length];
-  window.currentLocks[annotationId] = { lockedBy, color };
+/**
+ * Helper to track current locks and collaborator colors.
+ */
+export const lockAnnotation = (annotation, lockedBy) => {
+  const color = getColor(lockedBy);
+  CURRENT_LOCKS[annotation.id] = { lockedBy, color };
 }
 
 export default annotation => {

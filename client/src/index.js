@@ -1,3 +1,5 @@
+import Formatter, { lockAnnotation } from './formatter/Formatter';
+
 import { io } from 'socket.io-client';
 
 // HACK!
