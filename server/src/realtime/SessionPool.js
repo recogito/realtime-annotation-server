@@ -1,9 +1,12 @@
+
+import SocketIO from 'socket.io';
+
 import Session from './Session';
 
 class SessionPool {
 
-  constructor(io) {
-    console.log('Creating realtime session pool');
+  constructor(server) {
+    const io = SocketIO(server);
 
     this.sessions = {};
 
@@ -14,7 +17,7 @@ class SessionPool {
       socket.on('joinSession', msg => {
         const { source } = msg;
 
-        console.log(`Client ${socket.id} joins session ${source}`);
+        console.log(`Client ${socket.id} joined session ${source}`);
 
         if (!this.sessions[source])
           this.sessions[source] = new Session(source);

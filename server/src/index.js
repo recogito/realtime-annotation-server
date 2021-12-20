@@ -1,21 +1,21 @@
 import http from 'http';
 import express from 'express';
 
-import SessionPool from './SessionPool';
-import { exists, initDB } from './db/init';
-import { clearAllLocks } from './db/lock';
-import { deleteById, findBySource, upsertAnnotation } from './db/annotation';
+import Config from './config';
+import SessionPool from './realtime/SessionPool';
+import { exists, initDB } from './db';
+import { clearAllLocks } from './db/Lock';
+import { deleteById, findBySource, upsertAnnotation } from './db/Annotation';
 
 const app = express();
-const server = http.createServer(app);
-const io = require('socket.io')(server);
-
-// The realtime session pool
-SessionPool.init(io);
 
 app.use(express.json());
-
 app.set('json spaces', 2);
+
+const server = http.createServer(app);
+
+/** The realtime session pool **/
+SessionPool.init(server);
 
 /**
  * DB init, if needed
@@ -27,9 +27,6 @@ exists().then(exists => {
     initDB();
 });
 
-/**
- * Annotation CRUD
- */
 app.get('/annotation/search', (req, res) => {
   findBySource(req.query.source).then(result => {
     res.json(result);
@@ -48,8 +45,6 @@ app.delete('/annotation/:annotationId', (req, res) => {
   });
 });
 
-const PORT = 8080;
+server.listen(Config.SERVER_PORT, () => 
+  console.log(`API running on port ${Config.SERVER_PORT}`));
 
-server.listen(PORT);
-
-console.log(`API running on port ${PORT}`); 

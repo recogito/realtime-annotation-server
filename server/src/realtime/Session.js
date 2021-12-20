@@ -1,5 +1,10 @@
-import { selectAnnotation, createSelection, releaseLocks, modifyAnnotation } from "./db/lock";
-import { followChanges  } from "./db/lock";
+import { 
+  createSelection,
+  followChanges,
+  modifyAnnotation, 
+  releaseLocks,
+  selectAnnotation
+} from '../db/Lock';
 
 /**
  * A collaborative annotation session on one image.
@@ -20,17 +25,16 @@ export default class Session {
         if (new_val) {
           const { lockedBy, action } = new_val;
 
-          // Only needed for createAnnotation, to 
-          // replace Selection with Annotation.
-          const toReplace = action === 'created' ? old_val?.id : null;
+          // When a new annotation was created, clients need to
+          // replace the existing floating selection
+          const toReplace = action === 'created' ? old_val.id : null;
 
           this.sockets.forEach(socket => {
             if (socket.id !== lockedBy) { 
-              if (toReplace) {
+              if (toReplace)
                 socket.emit('create', { ...new_val, selection_id: toReplace });
-              } else {
+              else
                 socket.emit('edit', new_val)
-              }
             }
           });
 
@@ -70,9 +74,8 @@ export default class Session {
     socket.on('cancelSelected', annotation =>
       modifyAnnotation(id, 'reverted', annotation));
 
-    socket.on('deleteAnnotation', () => {
-      modifyAnnotation(id, 'deleted');
-    });
+    socket.on('deleteAnnotation', () =>
+      modifyAnnotation(id, 'deleted'));
 
     socket.on('change', annotation =>
       modifyAnnotation(id, 'changed', annotation));

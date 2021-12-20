@@ -103,21 +103,20 @@ class RethinkClientPlugin {
         method: 'DELETE'
       }));  
 
-    let source = instance._env.image?.src; 
-    if (!source) {
-      source = window.location.href;
-    
-      window.setTimeout(() => {
-          instance._env.image.src = source;
-      }, 1000);
-    }
+    /*
+    console.log('first', anno._env.image);
+
+    viewer.addHandler('open', function() {
+      console.log('load', anno._env.image);
+    });
+    */
 
     instance
-      .loadAnnotations(`/annotation/search?source=${encodeURIComponent(source)}`);
+      .loadAnnotations(`/annotation/search?source=${encodeURIComponent(instance._env.image?.src)}`);
 
     socket.on('connect', () => {
       console.log('Subscribing to live updates');
-      socket.emit('joinSession', { source });
+      socket.emit('joinSession', { source: instance._env.image?.src });
     });
 
     socket.on('obtainLockFailed', ({ annotation }) => {

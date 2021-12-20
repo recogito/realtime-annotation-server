@@ -1,9 +1,9 @@
 import r from 'rethinkdb';
 
-import CONFIG from './config';
+import { DB_CONFIG } from '../config';
 
 const conn = () => 
-  r.connect(CONFIG).then(conn => ({ conn, table: r.table('lock') }));
+  r.connect(DB_CONFIG).then(conn => ({ conn, table: r.table('lock') }));
 
 export const clearAllLocks = () => 
   conn().then(({ conn, table }) =>
