@@ -13,30 +13,38 @@ class RethinkClientPlugin {
 
     // Track the current selection
     this.currentSelection = null;
+
+    this._setupOutboundSocket();
+    this._setupOutputCRUD();
+    this._setupInboundSocket();
+
+    this._initialLoad();
   }
 
   _setupOutboundSocket = () => {
-    this.instance.on('selectAnnotation', annotation => {
-      this.currentSelection = annotation;   
-      this.socket.emit('selectAnnotation', annotation);
-    });
+    // Shorthand
+    const deselectAnd = fn => {
+      this.currentSelection = null;
+      fn();
+    }
 
-    this.instance.on('createSelection', selection  => {
-      this.currentSelection = selection;
-      this.socket.emit('createSelection', selection);
-    });
+    this.instance.on('selectAnnotation', annotation => 
+      deselectAnd(() => this.socket.emit('selectAnnotation', annotation)));
+
+    this.instance.on('createSelection', selection  =>
+      deselectAnd(() => this.socket.emit('createSelection', selection)));
 
     this.instance.on('cancelSelected', annotation =>
-      this.socket.emit('cancelSelected', annotation));
+      deselectAnd(() => this.socket.emit('cancelSelected', annotation)));
 
-    this.instance.on('createAnnotation', annotation => 
-      this.socket.emit('createAnnotation', annotation));
+    this.instance.on('createAnnotation', annotation =>
+      deselectAnd(() => this.socket.emit('createAnnotation', annotation)));
 
     this.instance.on('updateAnnotation', annotation =>
-      this.socket.emit('updateAnnotation', annotation));
+      deselectAnd(() => this.socket.emit('updateAnnotation', annotation)));
 
     this.instance.on('deleteAnnotation', annotation => 
-      this.socket.emit('deleteAnnotation', annotation));
+      deselectAnd(() => this.socket.emit('deleteAnnotation', annotation)));
 
     this.instance.on('changeSelectionTarget', target => {
       this.currentSelection = { ...this.currentSelection, target };
@@ -66,6 +74,8 @@ class RethinkClientPlugin {
   }
 
   _setupInboundSocket = () => {
+    // TODO weave in the Formatter here!
+    
     // TODO join the session as soon as image.src is available (lazy load, OSD!)
     this.socket.on('connect', () => {
       console.log('Subscribing to live updates');
@@ -115,6 +125,7 @@ class RethinkClientPlugin {
 
   }
 
+  _initialLoad = () => {
     /*
     console.log('first', anno._env.image);
 
@@ -123,9 +134,9 @@ class RethinkClientPlugin {
     });
     */
 
-//    instance
-//      .loadAnnotations(`/annotation/search?source=${encodeURIComponent(instance._env.image?.src)}`);
-
+    //    instance
+    //      .loadAnnotations(`/annotation/search?source=${encodeURIComponent(instance._env.image?.src)}`);
+  }
 
 }
 
