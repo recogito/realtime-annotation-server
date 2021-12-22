@@ -5,10 +5,6 @@ import { DB_CONFIG } from '../config';
 const conn = () => 
   r.connect(DB_CONFIG).then(conn => ({ conn, table: r.table('lock') }));
 
-export const clearAllLocks = () => 
-  conn().then(({ conn, table }) =>
-    table.delete().run(conn));
-
 const lock = (clientId, annotation, action, identifier) => {
   // Note that ID will be null for Selections (which is
   // fine - RethinkDB will auto-assign a temporary ID)
@@ -29,6 +25,16 @@ const lock = (clientId, annotation, action, identifier) => {
     .insert(lock, { conflict: 'error'})
     .run(conn)); 
 }
+
+export const clearAllLocks = () => 
+  conn().then(({ conn, table }) =>
+    table.delete().run(conn));
+
+export const  getLocksOnSource = source =>
+  conn().then(({ conn, table }) => table
+    .filter({ annotation: { target: { source }}})
+    .run(conn))
+      .then(cursor => cursor.toArray());
 
 export const selectAnnotation = (clientId, annotation) =>
   lock(clientId, annotation, 'selected');

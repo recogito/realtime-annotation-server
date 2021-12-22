@@ -1,6 +1,7 @@
 import { 
   createSelection,
   followChanges,
+  getLocksOnSource,
   modifyAnnotation, 
   releaseLocks,
   selectAnnotation
@@ -46,9 +47,6 @@ export default class Session {
   }
 
   join = socket => {
-    // TODO When a new socket joins, forward current state
-    // so the client can sync up with edits in progress
-
     const { id } = socket;
 
     socket.on('createSelection', selection =>
@@ -79,6 +77,10 @@ export default class Session {
 
     socket.on('changeAnnotation', annotation =>
       modifyAnnotation(id, 'changed', annotation));
+
+    // Set up initial state
+    getLocksOnSource(this.source).then(locks => locks.forEach(lock =>
+      socket.emit('edit', lock)));
 
     this.sockets.push(socket);
   } 
