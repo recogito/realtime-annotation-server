@@ -1,6 +1,6 @@
-# RethinkDB Annotation Server
+# Annotorious Real-Time Annotation Server
 
-An annotation server for RecogitoJS/Annotorious, built with RethinkDB and NodeJS.
+An real-time annotation server for GoogleDocs-style live collaboration in Annotorious, built with RethinkDB and NodeJS.
 
 __Work in progress!__
 
@@ -25,6 +25,12 @@ $ npm run dev
 
 The server will be available at <http://localhost:8080>
 
-### Server API
+## Client
 
-Todo...
+Annotorious requires a client plugin to connect the server and manage live syncing. For the time being, you can run this in dev mode:
+
+```sh
+$ cd client
+$ npm install
+$ npm start
+```
