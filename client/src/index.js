@@ -4,7 +4,7 @@ import Formatter, { lockAnnotation, releaseLock } from './formatter/Formatter';
 
 class RethinkClientPlugin {
 
-  constructor(instance) {
+  constructor(instance, viewer) {
     // Annotorious or RecogitoJS
     this.instance = instance;
 
@@ -14,25 +14,37 @@ class RethinkClientPlugin {
     // Track the current selection
     this.currentSelection = null;
 
+    // Set up outbound live channel...
     this._setupOutboundSocket();
     this._setupOutputCRUD();
-    this._setupInboundSocket();
 
-    this._initialLoad();
+    // ...load annotations...
+    this._initialLoad()  
+      // ...and then set inbound live channel
+      .then(source => this._setupInboundSocket(source));
+
+    // TODO the inbound live channel might change some of the
+    // initially loaded annotations, leading to jumps in the UI.
+    // We should defer rendering for a nicer user experience later.
   }
 
   _setupOutboundSocket = () => {
     // Shorthand
+    const selectAnd = (annotation, fn) => {
+      this.currentSelection = annotation;
+      fn();
+    }
+
     const deselectAnd = fn => {
       this.currentSelection = null;
       fn();
     }
 
     this.instance.on('selectAnnotation', annotation => 
-      deselectAnd(() => this.socket.emit('selectAnnotation', annotation)));
+      selectAnd(annotation, () => this.socket.emit('selectAnnotation', annotation)));
 
     this.instance.on('createSelection', selection  =>
-      deselectAnd(() => this.socket.emit('createSelection', selection)));
+      selectAnd(selection, () => this.socket.emit('createSelection', selection)));
 
     this.instance.on('cancelSelected', annotation =>
       deselectAnd(() => this.socket.emit('cancelSelected', annotation)));
@@ -48,7 +60,7 @@ class RethinkClientPlugin {
 
     this.instance.on('changeSelectionTarget', target => {
       this.currentSelection = { ...this.currentSelection, target };
-      this.socket.emit('change', this.currentSelection);
+      this.socket.emit('changeAnnotation', this.currentSelection);
     });
   }
 
@@ -73,18 +85,33 @@ class RethinkClientPlugin {
       fetch(`/annotation/${annotation.id.substr(1)}`, { method: 'DELETE' }));
   }
 
-  _setupInboundSocket = () => {
-    // TODO weave in the Formatter here!
-    
-    // TODO join the session as soon as image.src is available (lazy load, OSD!)
+  _initialLoad = () => {
+    const base = '/annotation/search?source=';
+    const source = this.instance._env.image.src;
+
+    // Lazy loading or OSD
+    if (!source) {
+      return new Promise(resolve => {
+        this.instance.on('load', () => {
+          const { src } = this.instance._env.image;
+          this.instance.loadAnnotations(base + encodeURIComponent(src)).then(() => {
+            resolve(src);
+          });
+        })
+      });
+    } else {
+      return this.instance.loadAnnotations(base + encodeURIComponent(source)).then(() => source);
+    }
+  }
+
+  _setupInboundSocket = source => {
     this.socket.on('connect', () => {
-      console.log('Subscribing to live updates');
-      this.socket.emit('joinSession', { source: instance._env.image?.src });
+      console.log(`Joining session for ${source}`);
+      this.socket.emit('joinSession', { source });
     });
 
-    this.socket.on('obtainLockFailed', ({ annotation }) => {
-      if (locked.id === annotation.id) {
-        // Roll back!
+    this.socket.on('lockRejected', annotation => {
+      if (annotation.id === this.currentSelection?.id) {
         console.log('Error: could not lock annotation for editing');
         this.currentSelection = null;
         this.instance.selectAnnotation(null);
@@ -92,50 +119,35 @@ class RethinkClientPlugin {
     });
 
     this.socket.on('edit', msg => {
-      console.log(msg);
-      const { annotation, action } = msg;
+      const { annotation, action, lockedBy } = msg;
 
-      if (['drafted', 'updated', 'changed', 'reverted'].includes(action)) {
-        if (action === 'drafted')
-          addCurrentLock(annotation.id, msg.lockedBy);
-
-        if (['updated', 'reverted'].includes(action))
-          removeCurrentLock(annotation.id);
-
-        if (action === 'reverted' && annotation.id.startsWith('selection'))
-          instance.removeAnnotation(annotation);
-        else
-          instance.addAnnotation(annotation);
+      if (action === 'drafted' || action === 'selected') {
+        lockAnnotation(annotation.id, lockedBy);
+        this.instance.addAnnotation(annotation);
+      } else if (action === 'changed') {
+        this.instance.addAnnotation(annotation);
+      } else if (action === 'created') {
+        // Means a Selection was promoted to Annotation
+        this.instance.removeAnnotation(msg.selectionId);
+        this.instance.addAnnotation(annotation);
       } else if (action === 'deleted') {
-        instance.removeAnnotation(annotation);
-      } else if (action === 'selected') {
-        console.log('remote select!', annotation.id);
-        console.log('current selected', instance.getSelected()?.id);
-        
-        addCurrentLock(msg.id, msg.lockedBy);
-        instance.addAnnotation(annotation);
+        releaseLock(annotation.id);
+        this.instance.removeAnnotation(annotation);
+      } else if (action === 'updated') {
+        releaseLock(annotation.id);
+        this.instance.addAnnotation(annotation);
+      } else if (action === 'reverted') {
+        releaseLock(annotation.id);
+
+        // Revert means: draft selection is removed,
+        // existing selected annotation is returned to 
+        // original state
+        if (annotation.type === 'Selection')
+          this.instance.removeAnnotation(annotation);
+        else
+          this.instance.addAnnotation(annotation);
       }
     });
-
-    socket.on('create', msg => {
-      const { selection_id, annotation } = msg;
-      instance.removeAnnotation(selection_id);
-      instance.addAnnotation(annotation);
-    });
-
-  }
-
-  _initialLoad = () => {
-    /*
-    console.log('first', anno._env.image);
-
-    viewer.addHandler('open', function() {
-      console.log('load', anno._env.image);
-    });
-    */
-
-    //    instance
-    //      .loadAnnotations(`/annotation/search?source=${encodeURIComponent(instance._env.image?.src)}`);
   }
 
 }

@@ -32,7 +32,7 @@ export default class Session {
           this.sockets.forEach(socket => {
             if (socket.id !== lockedBy) { 
               if (toReplace)
-                socket.emit('create', { ...new_val, selection_id: toReplace });
+                socket.emit('edit', { ...new_val, selectionId: toReplace });
               else
                 socket.emit('edit', new_val)
             }
@@ -59,8 +59,8 @@ export default class Session {
 
       selectAnnotation(id, annotation).then(result => {
         if (result.errors) {
-          console.log('Obtain lock failed', result.first_error);
-          socket.emit('obtainLockFailed', { annotation });
+          console.log('lock rejected', result.first_error);
+          socket.emit('lockRejected', annotation);
         }
       });
     });
@@ -77,7 +77,7 @@ export default class Session {
     socket.on('deleteAnnotation', () =>
       modifyAnnotation(id, 'deleted'));
 
-    socket.on('change', annotation =>
+    socket.on('changeAnnotation', annotation =>
       modifyAnnotation(id, 'changed', annotation));
 
     this.sockets.push(socket);
