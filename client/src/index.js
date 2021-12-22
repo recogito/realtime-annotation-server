@@ -2,26 +2,35 @@ import { io } from 'socket.io-client';
 
 import Formatter, { lockAnnotation, releaseLock } from './formatter/Formatter';
 
+import './formatter/Formatter.css';
+
 class RethinkClientPlugin {
 
   constructor(instance, viewer) {
     // Annotorious or RecogitoJS
     this.instance = instance;
-
-    // Open WebSocket
-    this.socket = io();
+    this.instance.formatters = [...this.instance.formatters, Formatter ];
 
     // Track the current selection
     this.currentSelection = null;
 
+    // Open WebSocket
+    this.socket = io();
+
+    // Connect (takes a while...)
+    const afterConnect = new Promise(resolve =>
+      this.socket.on('connect', () => resolve()));
+
+    // Initial load (takes a while...)
+    const afterLoad = this._initialLoad();
+    
     // Set up outbound live channel...
     this._setupOutboundSocket();
     this._setupOutputCRUD();
 
-    // ...load annotations...
-    this._initialLoad()  
-      // ...and then set inbound live channel
-      .then(source => this._setupInboundSocket(source));
+    // Set up inbound socket after load & connect
+    Promise.all([ afterConnect, afterLoad ]).then(([, source]) =>
+      this._setupInboundSocket(source));
 
     // TODO the inbound live channel might change some of the
     // initially loaded annotations, leading to jumps in the UI.
@@ -105,10 +114,7 @@ class RethinkClientPlugin {
   }
 
   _setupInboundSocket = source => {
-    this.socket.on('connect', () => {
-      console.log(`Joining session for ${source}`);
-      this.socket.emit('joinSession', { source });
-    });
+    this.socket.emit('joinSession', { source });
 
     this.socket.on('lockRejected', annotation => {
       if (annotation.id === this.currentSelection?.id) {

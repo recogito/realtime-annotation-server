@@ -1,0 +1,29 @@
+.a9s-annotation.locked .a9s-inner {
+  stroke-width:1px;
+  fill:rgba(255, 255, 255, 0.15);
+}
+
+.a9s-annotation.locked .a9s-outer {
+  stroke-width:0;
+}
+.a9s-annotationlayer .a9s-formatter-el,
+.a9s-annotationlayer .a9s-formatter-el foreignObject.a9s-rt {
+  overflow:visible;
+  pointer-events:none;
+}
+
+.a9s-annotationlayer .a9s-formatter-el foreignObject.a9s-rt .a9s-shape-label-wrapper {
+  position:relative;
+  transform:translateY(-100%);
+  padding-bottom:4px;
+}
+
+.a9s-annotationlayer .a9s-formatter-el foreignObject.a9s-rt .a9s-shape-label-wrapper .a9s-shape-label {
+  display:table;
+  padding:3px 5px;
+  white-space:nowrap;
+  color:#fff;
+  background-color:rgba(255, 255, 0, 0.85);
+  border-radius:3px;
+  font-size:14px;
+}

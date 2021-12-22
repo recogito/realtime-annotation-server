@@ -26,6 +26,7 @@ export default annotation => {
 
     // Label
     const foreignObject = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
+    foreignObject.setAttribute('class', 'a9s-rt');
     foreignObject.setAttribute('width', '1px');
     foreignObject.setAttribute('height', '1px');
 
