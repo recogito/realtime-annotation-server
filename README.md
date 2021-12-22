@@ -4,6 +4,11 @@ An real-time annotation server for GoogleDocs-style live collaboration in Annoto
 
 __Work in progress!__
 
+## Pre-Requisites
+
+The annotation server (and the associated client plugin needed to use it with Annotorious) requires
+__Annotorious v2.6.1__/__Annotorious OpenSeadragon v2.6.1__ or higher.
+
 ## Database Installation
 
 The included `docker-compose.yml` will install and start a RethinkDB instance locally via Docker.
