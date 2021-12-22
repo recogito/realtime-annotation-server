@@ -20,6 +20,11 @@ To start the server in development mode:
 ```sh
 $ cd server
 $ npm install
+```
+
+Create a copy of the file `.env.example` named `.env` and configure according to your environment.
+
+```sh
 $ npm run dev
 ```
 

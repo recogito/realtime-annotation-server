@@ -29,8 +29,9 @@ class RealtimeClientPlugin {
     this._setupOutputCRUD();
 
     // Set up inbound socket after load & connect
-    Promise.all([ afterConnect, afterLoad ]).then(([, source]) =>
-      this._setupInboundSocket(source));
+    Promise.all([ afterConnect, afterLoad ]).then(([, source]) => {
+      this._setupInboundSocket(source)
+    });
 
     // TODO the inbound live channel might change some of the
     // initially loaded annotations, leading to jumps in the UI.
@@ -96,7 +97,7 @@ class RealtimeClientPlugin {
 
   _initialLoad = () => {
     const base = '/annotation/search?source=';
-    const source = this.instance._env.image.src;
+    const source = this.instance._env.image?.src;
 
     // Lazy loading or OSD
     if (!source) {
