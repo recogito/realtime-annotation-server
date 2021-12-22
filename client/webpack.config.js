@@ -10,8 +10,8 @@ const resolveAppPath = relativePath => path.resolve(APP_DIR, relativePath);
 module.exports = {
   entry: resolveAppPath('src'),
   output: {
-    filename: 'recogito-rethink-client.js',
-    library: ['recogito', 'RethinkClient'],
+    filename: 'recogito-realtime-client.js',
+    library: ['recogito', 'RealtimeClient'],
     libraryTarget: 'umd',
     libraryExport: 'default'
   },

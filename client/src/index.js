@@ -4,9 +4,9 @@ import Formatter, { lockAnnotation, releaseLock } from './formatter/Formatter';
 
 import './formatter/Formatter.css';
 
-class RethinkClientPlugin {
+class RealtimeClientPlugin {
 
-  constructor(instance, viewer) {
+  constructor(instance) {
     // Annotorious or RecogitoJS
     this.instance = instance;
     this.instance.formatters = [...this.instance.formatters, Formatter ];
@@ -158,4 +158,4 @@ class RethinkClientPlugin {
 
 }
 
-export default instance => new RethinkClientPlugin(instance);
+export default instance => new RealtimeClientPlugin(instance);

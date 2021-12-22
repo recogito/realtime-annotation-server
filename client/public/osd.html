@@ -6,8 +6,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@recogito/annotorious-openseadragon@2.6.0/dist/annotorious.min.css">
     <script src="openseadragon/openseadragon.2.4.2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@recogito/annotorious-openseadragon@2.6.0/dist/openseadragon-annotorious.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@recogito/annotorious-better-polygon@latest/dist/annotorious-better-polygon.js"></script>
-    <script src="recogito-rethink-client.js"></script>
+    <script src="recogito-realtime-client.js"></script>
     <style>
       .a9s-annotation .a9s-inner {
         stroke-width:2px;
@@ -29,36 +28,6 @@
         fill: #ffff00;
       }
 
-      .a9s-annotation.locked .a9s-inner {
-        stroke-width:1px;
-        fill:rgba(255, 255, 255, 0.15);
-      }
-
-      .a9s-annotation.locked .a9s-outer {
-        stroke-width:0;
-      }
-      .a9s-annotationlayer .a9s-formatter-el,
-      .a9s-annotationlayer .a9s-formatter-el foreignObject {
-        overflow:visible;
-        pointer-events:none;
-      }
-
-      .a9s-annotationlayer .a9s-formatter-el foreignObject .a9s-shape-label-wrapper {
-        position:relative;
-        transform:translateY(-100%);
-        padding-bottom:4px;
-      }
-
-      .a9s-annotationlayer .a9s-formatter-el foreignObject .a9s-shape-label-wrapper .a9s-shape-label {
-        display:table;
-        padding:3px 5px;
-        white-space:nowrap;
-        color:#fff;
-        background-color:rgba(255, 255, 0, 0.85);
-        border-radius:3px;
-        font-size:14px;
-      }
-
       #hallstatt {
         width:800px;
         height:600px;
@@ -69,36 +38,6 @@
     <div id="hallstatt"></div>
 
     <script>
-      window.currentLocks = {};
-
-      const formatter = annotation => {
-        const { id } = annotation;
-
-        const lock = window.currentLocks[id];
-
-        if (lock) {
-          const { lockedBy, color } = lock;
-
-          const foreignObject = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
-
-          foreignObject.setAttribute('width', '1px');
-          foreignObject.setAttribute('height', '1px');
-
-          foreignObject.innerHTML = `
-            <div xmlns="http://www.w3.org/1999/xhtml" class="a9s-shape-label-wrapper">
-              <div class="a9s-shape-label" style="background-color:${color}">
-                ${lockedBy}
-              </div>
-            </div>`;
-          return {
-            className: 'locked',
-            element: foreignObject,
-            'data-locked': lockedBy,
-            style: `stroke: ${color}`
-          }
-        }
-      }
-
       window.onload = function() {
         var viewer = OpenSeadragon({
           id: "hallstatt",
@@ -115,10 +54,7 @@
           allowEmpty: true
         });
 
-        Annotorious.BetterPolygon(anno);
-        recogito.RethinkClient(anno);
-
-        // anno.setDrawingTool('polygon');
+        recogito.RealtimeClient(anno);
       }
     </script>
   </body>
