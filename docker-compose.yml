@@ -1,0 +1,31 @@
+version: '3.7'
+
+services: 
+  server:
+    container_name: recogito-server
+    build: 
+      context: server
+      dockerfile: Dockerfile
+    ports:
+      - 8080:8080
+    restart: always
+    networks:
+      - net
+    depends_on:
+      - rethinkdb
+    
+  rethinkdb:
+    image: rethinkdb:2.4
+    ports:
+      - 8081:8080
+      - 28015:28015
+    volumes:
+      - ./data:/app
+    networks:
+      - net
+    
+networks:
+  net:
+volumes:
+  esdata:
+  esplugins:

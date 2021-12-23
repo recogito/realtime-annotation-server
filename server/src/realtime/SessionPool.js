@@ -1,7 +1,6 @@
-
-import SocketIO from 'socket.io';
-
 import Session from './Session';
+
+const SocketIO = require('socket.io');
 
 class SessionPool {
 
