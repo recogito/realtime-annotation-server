@@ -57,12 +57,12 @@ module.exports = {
     },
     proxy: {
       '/annotation': {
-        target: 'http://localhost:8080/',
+        target: 'http://localhost/',
         secure: false,
         changeOrigin: true
       },
       '/socket.io/': {
-        target: 'http://localhost:8080/',
+        target: 'http://localhost/',
         secure: false,
         changeOrigin: true
       }

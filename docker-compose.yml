@@ -6,8 +6,8 @@ services:
     build: 
       context: server
       dockerfile: Dockerfile
-    ports:
-      - 8080:8080
+    expose:
+      - 8080
     restart: always
     networks:
       - net
@@ -16,12 +16,24 @@ services:
     
   rethinkdb:
     image: rethinkdb:2.4
-    ports:
-      - 8081:8080
     expose:
+      - 8080
       - 28015
     volumes:
       - ./server/data:/app
+    networks:
+      - net
+
+  nginx:
+    depends_on: 
+      - server
+    container_name: proxy
+    build: 
+      context: ./nginx/
+      dockerfile: Dockerfile
+    ports: 
+        - 80:80
+    restart: always
     networks:
       - net
     
