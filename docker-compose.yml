@@ -21,7 +21,7 @@ services:
     expose:
       - 28015
     volumes:
-      - ./data:/app
+      - ./server/data:/app
     networks:
       - net
     
