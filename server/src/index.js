@@ -21,10 +21,11 @@ SessionPool.init(server);
  * DB init, if needed
  */
 exists().then(exists => {
-  if (exists)
+  if (exists) {
     clearAllLocks();
-  else
+  } else {
     initDB();
+  }
 });
 
 app.get('/annotation/search', (req, res) => {

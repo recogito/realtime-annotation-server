@@ -1,15 +1,16 @@
 {
-  "name": "@recogito/annotation-server",
+  "name": "@recogito/realtime-annotation-server",
   "version": "0.0.1",
   "description": "An annotation server for RecogitoJS/Annotorious built with RethinkDB",
   "main": "src/index.js",
   "scripts": {
     "dev": "nodemon --exec babel-node src/index.js",
-    "build": "rollup -c",
-    "start": "node dist/recogito-rethink-server.js"
+    "build": "babel src -d dist",
+    "start": "node dist/index.js"
   },
   "author": "Rainer Simon",
   "license": "BSD-3-Clause",
+  "repository": "github:recogito/realtime-annotation-server",
   "dependencies": {
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
@@ -23,11 +24,7 @@
     "@babel/core": "^7.16.0",
     "@babel/node": "^7.16.0",
     "@babel/preset-env": "^7.16.4",
-    "@rollup/plugin-babel": "^5.3.0",
-    "@rollup/plugin-commonjs": "^21.0.1",
-    "@rollup/plugin-json": "^4.1.0",
-    "@rollup/plugin-node-resolve": "^13.0.6",
-    "nodemon": "^2.0.15",
-    "rollup": "^2.61.0"
-  }
+    "nodemon": "^2.0.15"
+  },
+  "optionalDependencies": {}
 }
