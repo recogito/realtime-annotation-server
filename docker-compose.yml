@@ -32,7 +32,7 @@ services:
       context: ./nginx/
       dockerfile: Dockerfile
     ports: 
-        - 80:80
+        - 9000:9000
     restart: always
     networks:
       - net
