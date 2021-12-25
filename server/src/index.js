@@ -46,6 +46,10 @@ app.delete('/annotation/:annotationId', (req, res) => {
   });
 });
 
+app.get('/version', (req, res) => {
+  res.json({ version: '0.0.1' });
+});
+
 server.listen(Config.SERVER_PORT, () => 
   console.log(`API running on port ${Config.SERVER_PORT}`));
 
