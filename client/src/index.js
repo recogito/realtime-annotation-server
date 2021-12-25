@@ -6,16 +6,18 @@ import './formatter/Formatter.css';
 
 class RealtimeClientPlugin {
 
-  constructor(instance) {
+  constructor(anno, config) {
     // Annotorious or RecogitoJS
-    this.instance = instance;
-    this.instance.formatters = [...this.instance.formatters, Formatter ];
+    this.anno = anno;
+    this.anno.formatters = [...this.anno.formatters, Formatter ];
+
+    this.config = config;
 
     // Track the current selection
     this.currentSelection = null;
 
     // Open WebSocket
-    this.socket = io();
+    this.socket = io(this.config.server);
 
     // Connect (takes a while...)
     const afterConnect = new Promise(resolve =>
@@ -29,9 +31,8 @@ class RealtimeClientPlugin {
     this._setupOutputCRUD();
 
     // Set up inbound socket after load & connect
-    Promise.all([ afterConnect, afterLoad ]).then(([, source]) => {
-      this._setupInboundSocket(source)
-    });
+    Promise.all([ afterConnect, afterLoad ]).then(([, source]) =>
+      this._setupInboundSocket(source));
 
     // TODO the inbound live channel might change some of the
     // initially loaded annotations, leading to jumps in the UI.
@@ -50,31 +51,33 @@ class RealtimeClientPlugin {
       fn();
     }
 
-    this.instance.on('selectAnnotation', annotation => 
+    this.anno.on('selectAnnotation', annotation => 
       selectAnd(annotation, () => this.socket.emit('selectAnnotation', annotation)));
 
-    this.instance.on('createSelection', selection  =>
+    this.anno.on('createSelection', selection  =>
       selectAnd(selection, () => this.socket.emit('createSelection', selection)));
 
-    this.instance.on('cancelSelected', annotation =>
+    this.anno.on('cancelSelected', annotation =>
       deselectAnd(() => this.socket.emit('cancelSelected', annotation)));
 
-    this.instance.on('createAnnotation', annotation =>
+    this.anno.on('createAnnotation', annotation =>
       deselectAnd(() => this.socket.emit('createAnnotation', annotation)));
 
-    this.instance.on('updateAnnotation', annotation =>
+    this.anno.on('updateAnnotation', annotation =>
       deselectAnd(() => this.socket.emit('updateAnnotation', annotation)));
 
-    this.instance.on('deleteAnnotation', annotation => 
+    this.anno.on('deleteAnnotation', annotation => 
       deselectAnd(() => this.socket.emit('deleteAnnotation', annotation)));
 
-    this.instance.on('changeSelectionTarget', target => {
+    this.anno.on('changeSelectionTarget', target => {
       this.currentSelection = { ...this.currentSelection, target };
       this.socket.emit('changeAnnotation', this.currentSelection);
     });
   }
 
   _setupOutputCRUD = () => {
+    const base = this.config.server || '';
+
     // Helper to create POST request
     const postData = obj => ({
       method: 'POST',
@@ -85,32 +88,32 @@ class RealtimeClientPlugin {
       body: JSON.stringify(obj)
     });
 
-    this.instance.on('createAnnotation', annotation =>
-      fetch('/annotation', postData(annotation)));
+    this.anno.on('createAnnotation', annotation =>
+      fetch(`${base}/annotation`, postData(annotation)));
 
-    this.instance.on('updateAnnotation', annotation =>
-      fetch('/annotation', postData(annotation)));
+    this.anno.on('updateAnnotation', annotation =>
+      fetch(`${base}/annotation`, postData(annotation)));
 
-    this.instance.on('deleteAnnotation', annotation =>
-      fetch(`/annotation/${annotation.id.substr(1)}`, { method: 'DELETE' }));
+    this.anno.on('deleteAnnotation', annotation =>
+      fetch(`${base}/annotation/${annotation.id.substr(1)}`, { method: 'DELETE' }));
   }
 
   _initialLoad = () => {
-    const base = '/annotation/search?source=';
-    const source = this.instance._env.image?.src;
+    const base = `${this.config.server || ''}/annotation/search?source=`;
+    const source = this.anno._env.image?.src;
 
     // Lazy loading or OSD
     if (!source) {
       return new Promise(resolve => {
-        this.instance.on('load', () => {
-          const { src } = this.instance._env.image;
-          this.instance.loadAnnotations(base + encodeURIComponent(src)).then(() => {
+        this.anno.on('load', () => {
+          const { src } = this.anno._env.image;
+          this.anno.loadAnnotations(base + encodeURIComponent(src)).then(() => {
             resolve(src);
           });
         })
       });
     } else {
-      return this.instance.loadAnnotations(base + encodeURIComponent(source)).then(() => source);
+      return this.anno.loadAnnotations(base + encodeURIComponent(source)).then(() => source);
     }
   }
 
@@ -121,7 +124,7 @@ class RealtimeClientPlugin {
       if (annotation.id === this.currentSelection?.id) {
         console.log('Error: could not lock annotation for editing');
         this.currentSelection = null;
-        this.instance.selectAnnotation(null);
+        this.anno.selectAnnotation(null);
       }
     });
 
@@ -130,19 +133,19 @@ class RealtimeClientPlugin {
 
       if (action === 'drafted' || action === 'selected') {
         lockAnnotation(annotation.id, lockedBy);
-        this.instance.addAnnotation(annotation);
+        this.anno.addAnnotation(annotation);
       } else if (action === 'changed') {
-        this.instance.addAnnotation(annotation);
+        this.anno.addAnnotation(annotation);
       } else if (action === 'created') {
         // Means a Selection was promoted to Annotation
-        this.instance.removeAnnotation(msg.selectionId);
-        this.instance.addAnnotation(annotation);
+        this.anno.removeAnnotation(msg.selectionId);
+        this.anno.addAnnotation(annotation);
       } else if (action === 'deleted') {
         releaseLock(annotation.id);
-        this.instance.removeAnnotation(annotation);
+        this.anno.removeAnnotation(annotation);
       } else if (action === 'updated') {
         releaseLock(annotation.id);
-        this.instance.addAnnotation(annotation);
+        this.anno.addAnnotation(annotation);
       } else if (action === 'reverted') {
         releaseLock(annotation.id);
 
@@ -150,13 +153,14 @@ class RealtimeClientPlugin {
         // existing selected annotation is returned to 
         // original state
         if (annotation.type === 'Selection')
-          this.instance.removeAnnotation(annotation);
+          this.anno.removeAnnotation(annotation);
         else
-          this.instance.addAnnotation(annotation);
+          this.anno.addAnnotation(annotation);
       }
     });
   }
 
 }
 
-export default instance => new RealtimeClientPlugin(instance);
+export default (anno, config) =>
+  new RealtimeClientPlugin(anno, config);

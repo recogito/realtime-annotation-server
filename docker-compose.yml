@@ -19,6 +19,7 @@ services:
     expose:
       - 8080
       - 28015
+    restart: always
     volumes:
       - ./server/data:/app
     networks:
