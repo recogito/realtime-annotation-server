@@ -64,5 +64,5 @@ export const modifyAnnotation = (clientId, action, annotation) => annotation ?
 export const followChanges = source =>
   conn().then(({ conn, table }) => table
     .filter({ annotation: { target: { source }}})
-    .changes()
+    .changes({ squash: false })
     .run(conn));
