@@ -1,6 +1,6 @@
 import { io } from 'socket.io-client';
 
-import Formatter, { lockAnnotation, releaseLock } from './formatter/Formatter';
+import Formatter, { lockAnnotation, releaseLock, releaseLocksBy } from './formatter/Formatter';
 
 import './formatter/Formatter.css';
 
@@ -11,7 +11,7 @@ class RealtimeClientPlugin {
     this.anno = anno;
     this.anno.formatters = [...this.anno.formatters, Formatter ];
 
-    this.config = config;
+    this.config = config || {};
 
     // Track the current selection
     this.currentSelection = null;
@@ -128,7 +128,17 @@ class RealtimeClientPlugin {
       }
     });
 
+    // TODO join
+
+    this.socket.on('leave', ({ id }) => {
+      const locked = releaseLocksBy(id);
+      if (locked)
+        this.anno.addAnnotation(this.anno.getAnnotationById(locked));
+    });
+
     this.socket.on('edit', msg => {
+      console.log('message', msg);
+      
       const { annotation, action, lockedBy } = msg;
 
       if (action === 'drafted' || action === 'selected') {

@@ -17,6 +17,16 @@ export const lockAnnotation = (annotationId, lockedBy) => {
 export const releaseLock = annotationId =>
   delete CURRENT_LOCKS[annotationId];
 
+export const releaseLocksBy = userId => {
+  const updated = Object.keys(CURRENT_LOCKS).find(annotationId =>
+    CURRENT_LOCKS[annotationId].lockedBy === userId);
+
+  if (updated)
+    delete CURRENT_LOCKS[updated];
+    
+  return updated;
+}
+
 export default annotation => {
   // Check if this annotation is locked by someone
   const locked = CURRENT_LOCKS[annotation.id];

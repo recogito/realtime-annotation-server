@@ -89,8 +89,14 @@ export default class Session {
     this.sockets.includes(socket);
 
   leave = socket => {
-    releaseLocks(socket.id);
+    const { id } = socket;
+    releaseLocks(id);
+
     this.sockets = this.sockets.filter(s => s !== socket);
+
+    this.sockets.forEach(socket => {
+      socket.emit('leave', { id });
+    });
   }
 
   close = () =>
