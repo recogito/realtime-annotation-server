@@ -18,11 +18,10 @@ export const releaseLock = annotationId =>
   delete CURRENT_LOCKS[annotationId];
 
 export const releaseLocksBy = userId => {
-  const updated = Object.keys(CURRENT_LOCKS).find(annotationId =>
+  const updated = Object.keys(CURRENT_LOCKS).filter(annotationId =>
     CURRENT_LOCKS[annotationId].lockedBy === userId);
 
-  if (updated)
-    delete CURRENT_LOCKS[updated];
+  updated.forEach(l => delete CURRENT_LOCKS[l]);
     
   return updated;
 }

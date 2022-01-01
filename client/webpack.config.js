@@ -57,12 +57,14 @@ module.exports = {
     },
     proxy: {
       '/annotation': {
-        target: 'http://localhost:9000',
+        target: 'http://localhost:8080',
+        target: 'https://demo-server.annotorious.com',
         secure: false,
         changeOrigin: true
       },
       '/socket.io/': {
-        target: 'http://localhost:9000',
+        target: 'http://localhost:8080',
+        // target: 'https://demo-server.annotorious.com',
         secure: false,
         changeOrigin: true
       }

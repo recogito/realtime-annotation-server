@@ -51,14 +51,18 @@ class RealtimeClientPlugin {
       fn();
     }
 
-    this.anno.on('selectAnnotation', annotation => 
-      selectAnd(annotation, () => this.socket.emit('selectAnnotation', annotation)));
+    this.anno.on('selectAnnotation', annotation => {
+      console.log('select');
+      selectAnd(annotation, () => this.socket.emit('selectAnnotation', annotation))
+    });
 
     this.anno.on('createSelection', selection  =>
       selectAnd(selection, () => this.socket.emit('createSelection', selection)));
 
-    this.anno.on('cancelSelected', annotation =>
-      deselectAnd(() => this.socket.emit('cancelSelected', annotation)));
+    this.anno.on('cancelSelected', annotation => {
+      console.log('cancelSelected');
+      deselectAnd(() => this.socket.emit('cancelSelected', annotation))
+    });
 
     this.anno.on('createAnnotation', annotation =>
       deselectAnd(() => this.socket.emit('createAnnotation', annotation)));
@@ -131,9 +135,7 @@ class RealtimeClientPlugin {
     // TODO join
 
     this.socket.on('leave', ({ id }) => {
-      const locked = releaseLocksBy(id);
-      if (locked)
-        this.anno.addAnnotation(this.anno.getAnnotationById(locked));
+      releaseLocksBy(id).forEach(l => this.anno.addAnnotation(this.anno.getAnnotationById(l)));
     });
 
     this.socket.on('edit', msg => {
@@ -142,6 +144,8 @@ class RealtimeClientPlugin {
       const { annotation, action, lockedBy } = msg;
 
       if (action === 'drafted' || action === 'selected') {
+        // Hack
+        releaseLocksBy(lockedBy).forEach(l => this.anno.addAnnotation(this.anno.getAnnotationById(l)));
         lockAnnotation(annotation.id, lockedBy);
         this.anno.addAnnotation(annotation);
       } else if (action === 'changed') {
