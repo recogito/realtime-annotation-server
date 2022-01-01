@@ -149,6 +149,7 @@ class RealtimeClientPlugin {
         lockAnnotation(annotation.id, lockedBy);
         this.anno.addAnnotation(annotation);
       } else if (action === 'changed') {
+        lockAnnotation(annotation.id, lockedBy);
         this.anno.addAnnotation(annotation);
       } else if (action === 'created') {
         // Means a Selection was promoted to Annotation
