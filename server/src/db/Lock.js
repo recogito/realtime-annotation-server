@@ -5,6 +5,9 @@ import { DB_CONFIG } from '../config';
 const conn = () => 
   r.connect(DB_CONFIG).then(conn => ({ conn, table: r.table('lock') }));
 
+const affected = result =>
+  Object.values(result).reduce((a, b) => a + b);
+
 const lock = (clientId, annotation, action, identifier) => {
   // Note that ID will be null for Selections (which is
   // fine - RethinkDB will auto-assign a temporary ID)
@@ -50,16 +53,18 @@ export const releaseLocks = clientId =>
     .delete()
     .run(conn));
 
-export const modifyAnnotation = (clientId, action, annotation) => annotation ? 
-  conn().then(({ conn, table }) => table
+export const modifyAnnotation = (clientId, action, annotation) => {
+  const update = annotation ? { action, annotation } : { action };
+
+  return conn().then(({ conn, table }) => table
     .filter({ lockedBy: clientId })
-    .update({ action, annotation })
-    .run(conn)) : 
-  
-  conn().then(({ conn, table }) => table
-    .filter({ lockedBy: clientId })
-    .update({ action })
-    .run(conn));
+    .update(update)
+    .run(conn))
+      .then(result => {
+        if (affected(result) === 0)
+          throw 'Cannot modify annotation locked by other client'
+      });
+}
 
 export const followChanges = source =>
   conn().then(({ conn, table }) => table

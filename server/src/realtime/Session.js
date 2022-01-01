@@ -76,7 +76,10 @@ export default class Session {
       modifyAnnotation(id, 'deleted'));
 
     socket.on('changeAnnotation', annotation =>
-      modifyAnnotation(id, 'changed', annotation));
+      modifyAnnotation(id, 'changed', annotation)
+        .catch(() => {
+          socket.emit('lockRejected', annotation);
+        }));
 
     // Set up initial state
     getLocksOnSource(this.source).then(locks => locks.forEach(lock =>
