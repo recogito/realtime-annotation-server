@@ -61,8 +61,13 @@ export const modifyAnnotation = (clientId, action, annotation) => {
     .update(update)
     .run(conn))
       .then(result => {
-        if (affected(result) === 0)
-          throw 'Cannot modify annotation locked by other client'
+        if (affected(result) === 0) {
+          console.log('wait!', annotation);
+          // No lock for this annotation and client! Create new lock (or fail)
+          return annotation.type === 'Annotation' ? 
+            selectAnnotation(clientId, annotation) :
+            createSelection(clientId, annotation);
+        }
       });
 }
 

@@ -23,6 +23,8 @@ export default class Session {
       cursor.each((error, row) => {        
         const { old_val, new_val } = row;
 
+        console.log(new_val);
+
         if (new_val) {
           const { lockedBy, action } = new_val;
 
