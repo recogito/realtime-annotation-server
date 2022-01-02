@@ -9,14 +9,9 @@ __<https://realtime-demo.annotorious.com/>__
 ![Social preview image](social.jpg)
 
 __This project is work in progress! Want to learn more? Deploy your own server? 
-Contribute to further development? Get in touch via the 
+Contribute to development? Get in touch via the 
 [Annotorious Gitter chat](https://gitter.im/recogito/annotorious) or send me
-[a DM via twitter](https://twitter.com/aboutgeo)!__
-
-## Pre-Requisites
-
-The annotation server (and the associated client plugin needed to use it with Annotorious) requires
-__Annotorious v2.6.1__/__Annotorious OpenSeadragon v2.6.1__ or higher.
+[a DM on twitter](https://twitter.com/aboutgeo)!__
 
 ## Database Installation
 
