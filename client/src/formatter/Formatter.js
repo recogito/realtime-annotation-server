@@ -10,6 +10,8 @@ const CURRENT_LOCKS = {}
  * Helper to track current locks and collaborator colors.
  */
 export const lockAnnotation = (annotationId, lockedBy) => {
+  releaseLocksBy(lockedBy);
+  
   const color = getColor(lockedBy);
   CURRENT_LOCKS[annotationId] = { lockedBy, color };
 }
