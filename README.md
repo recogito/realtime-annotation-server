@@ -1,8 +1,15 @@
 # Annotorious Real-Time Annotation Server
 
-An real-time annotation server for GoogleDocs-style live collaboration in Annotorious, built with RethinkDB and NodeJS.
+An experimental real-time annotation server that enables GoogleDocs-style live 
+collaboration in Annotorious. Built with RethinkDB and NodeJS. Try the 
+online demo here:
 
-__Work in progress!__
+<https://realtime-demo.annotorious.com/>
+
+__This project is work in progress! Want to learn more? Deploy your own server? 
+Contribute to further development? Get in touch via the 
+[Annotorious Gitter chat](https://gitter.im/recogito/annotorious) or send me
+[a DM via twitter](https://twitter.com/aboutgeo)!__
 
 ## Pre-Requisites
 
