@@ -1,8 +1,8 @@
 # Annotorious Real-Time Annotation Server
 
 An experimental annotation server that enables GoogleDocs-style live 
-collaboration in Annotorious. Built with RethinkDB and NodeJS. Try the 
-online demo here:
+collaboration in Annotorious. Built with [RethinkDB](https://rethinkdb.com/) and 
+[NodeJS](https://nodejs.org/). Try the online demo here:
 
 __<https://realtime-demo.annotorious.com/>__
 
@@ -13,35 +13,25 @@ Contribute to development? Get in touch via the
 [Annotorious Gitter chat](https://gitter.im/recogito/annotorious) or send me
 [a DM on twitter](https://twitter.com/aboutgeo)!__
 
-## Database Installation
+## Usage
 
-The included `docker-compose.yml` will install and start a RethinkDB instance locally via Docker.
+You need [Docker](https://www.docker.com/) and [docker-compose](https://docs.docker.com/compose/) installed on your system. 
+Run `docker-compose up` in the root directory. This will create and launch 3 containers:
 
-`$ docker-compose up`
+- Storage backend (RethinkDB)
+- Annotation server (NodeJS application)
+- NGINX proxy server
 
-The RethinkDB admin interface will be available at <http://localhost:8081> 
+The annotation server will be available at <http://localhost:9000>, the RethinkDB admin interface will be available
+at <http://localhost:9000/db/> (the trailing slash is important!)
 
-## Annotation Server
+You can check if the annotation server has started correctly by going to 
 
-The Annotation Server is a simple [ExpressJS](http://expressjs.com/) API on top of RethinkDB. 
-To start the server in development mode:
-
-```sh
-$ cd server
-$ npm install
-```
-
-Create a copy of the file `.env.example` named `.env` and configure according to your environment.
-
-```sh
-$ npm run dev
-```
-
-The server will be available at <http://localhost:8080>
+<http://localhost:9000/version>
 
 ## Client
 
-Annotorious requires a client plugin to connect the server and manage live syncing. For the time being, you can run this in dev mode:
+To interact with the server and handle live syncing, Annotorious needs a client plugin. For the time being, you can run the plugin in dev mode:
 
 ```sh
 $ cd client
